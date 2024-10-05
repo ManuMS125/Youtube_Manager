@@ -1,3 +1,2 @@
-# Youtube_Manager
+#Youtube VideOManager Project
 
-This is youtube manager.
