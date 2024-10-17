@@ -1,101 +1,75 @@
-import json
+import sqlite3
 
-def load_data():
-    try:
-        with open('youtube.txt','r') as f:
-            test= json.load(f)   #json loads in list format
-            
-            return test
-    except FileNotFoundError:
-        return []
-
-def save_data(videos):
-    with open('youtube.txt', 'w') as f:
-        json.dump(videos, f)   #json dumps in list type
+con = sqlite3.connect('youtube_videos.db')
 
 
-    
-
-def list_all_videos(videos):
-    print('\n','*'*89)
-    if(len(videos)==0):
-        print('There are no videos currently, please add them')
-    for index, vid in enumerate(videos, start=1):
-        print(index,vid['name'],vid['time'])
-    print('\n','*'*89)
 
 
-def add_videos(videos):
-    name=input("Entaer name of the video :")
-    time=input('Enter time length of the video :')
-    videos.append({'name':name,'time':time})
-    save_data(videos)
+cursor = con.cursor()
 
-def update_videos(videos):
-    list_all_videos(videos)
-    index=int(input('Enter the index of the video you wants to update : '))
-    if (1<=index<=len(videos)):
-        name=input('Enter the name of the video : ')
-        time=input('Enter the tital length : ')
-        videos[index-1]={'name':name, 'time':time}
-        save_data(videos)      
-    else:
-        print('invalid')
 
-def delete_videos(videos):
-    list_all_videos(videos)
-    index=int(input("Enter the index of the video to be deleted : "))
-    if (1<=index<=len(videos)):
-        del videos[index-1]
-        save_data(videos)
-    else:
-        print("invalid index")
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS videos (
+               id INTEGER PRIMARY KEY,
+               name TEXT NOT NULL,
+               time TEXT NOT NULL
+    )
+
+""")
+
+def list_videos():
+    cursor.execute('SELECT * FROM videos')
+    for row in cursor.fetchall():
+        print(row)
+
+def add_video(name, time):
+    cursor.execute('INSERT INTO videos (name, time) VALUES (?, ?)', (name, time))
+    con.commit()
+
+def update_video(vid_ID, name, time):
+    cursor.execute("UPDATE videos SET name = ?, time = ? WHERE id = ?", (name, time, vid_ID))
+    con.commit()
+
+def delete_video(vid_ID):
+    cursor.execute('DELETE FROM videos WHERE id = ?', (vid_ID,))
+    con.commit()
 
 
 def main():
-    videos=load_data()
-
     while True:
-        print("Welcome\nYoutube Manager\n Select an option:")
-        print("1.List all youtube videos")
-        print("2.Add  youtube videos")
-        print("3.update a youtube video details")
-        print("4.Delete a video")
-        print('5.Exit')
+        print('\n Youtube Manager app with DB')
+        print('1. List videos')
+        print('2. ADD videOs')
+        print('3. update videos')
+        print('4. Delete videos')
+        print('5. Exit')
 
-        choice=input("Enter your choice:")
-
-        
+        choice = input('Enter your choice : ')
 
         match choice:
             case '1':
-                list_all_videos(videos)
+                list_videos()
             case '2':
-                add_videos(videos)
+                name = input ('Enter the video name')
+                time = input('Enter the video time')
+                add_video(name, time)
             case '3':
-                update_videos(videos)
+                vid_ID = input('Enter video id to update : ')
+                name = input ('Enter the video name')
+                time = input('Enter the video time')
+                update_video(vid_ID, name, time)
+
             case '4':
-                delete_videos(videos)
+                vid_ID = input('Enter video id to delete : ')
+                delete_video(vid_ID)
+
             case '5':
-                print('Thank You!!')
                 break
             case _:
-                print('Invalid Choiceesssghghgjhgg')
-        
+                print('Invalid Choice.')
+    con.close()
 
 
-
-
-
-
-
-
-
-
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
-
-
-
-
-
